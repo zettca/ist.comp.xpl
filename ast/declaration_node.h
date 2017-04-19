@@ -11,18 +11,22 @@ namespace xpl {
    */
   class declaration_node: public cdk::basic_node {
     std::string *_qualifier;
-    cdk::lvalue_node *_identifier;
+    std::string *_type;
+    std::string *_identifier;
 
   public:
-    inline declaration_node(int lineno, std::string *qual, cdk::lvalue_node *id) :
-        cdk::basic_node(lineno), _qualifier(qual), _identifier(id) {
+    inline declaration_node(int lineno, std::string *qual, std::string *type, std::string *id) :
+        cdk::basic_node(lineno), _qualifier(qual), _type(type), _identifier(id) {
     }
 
   public:
     inline std::string *qualifier() {
       return _qualifier;
     }
-    inline cdk::lvalue_node *identifier() {
+    inline std::string *type() {
+      return _type;
+    }
+    inline std::string *identifier() {
       return _identifier;
     }
     void accept(basic_ast_visitor *sp, int level) {
