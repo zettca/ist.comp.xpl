@@ -4,5 +4,6 @@ xpl_parser.tab.h
 xpl_parser.tab.c
 xpl_scanner.cpp
 .cvsignore
+all.h
 CVS
 *.o
