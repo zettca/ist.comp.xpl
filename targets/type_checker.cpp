@@ -190,5 +190,3 @@ void xpl::type_checker::do_block_node(xpl::block_node * const node, int lvl) {}
 void xpl::type_checker::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
 
 void xpl::type_checker::do_identity_node(xpl::identity_node * const node, int lvl) {}
-
-void xpl::type_checker::do_symmetry_node(xpl::symmetry_node * const node, int lvl) {}
