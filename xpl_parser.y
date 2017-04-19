@@ -1,5 +1,5 @@
 %{
-// $Id: xpl_parser.y,v 1.1 2017/02/17 16:02:31 david Exp $
+// $Id: xpl_parser.y,v 1.2 2017/04/19 21:28:17 ist178013 Exp $
 //-- don't change *any* of these: if you do, you'll break the compiler.
 #include <cdk/compiler.h>
 #include "ast/all.h"
@@ -33,7 +33,7 @@
 %left '*' '/' '%'
 %nonassoc tUNARY
 
-%type <node> stmt program
+%type <node> stmt
 %type <sequence> list
 %type <expression> expr
 %type <lvalue> lval
@@ -42,9 +42,6 @@
 //-- The rules below will be included in yyparse, the main parsing function.
 %}
 %%
-
-program : tBEGIN list tEND { compiler->ast(new xpl::program_node(LINE, $2)); }
-        ;
 
 list : stmt      { $$ = new cdk::sequence_node(LINE, $1); }
      | list stmt { $$ = new cdk::sequence_node(LINE, $2, $1); }
