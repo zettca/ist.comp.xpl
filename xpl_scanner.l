@@ -1,7 +1,7 @@
 %option c++ yyclass="xpl_scanner" outfile="xpl_scanner.cpp"
 %option stack noyywrap yylineno 8bit
 %{ 
-/* $Id: xpl_scanner.l,v 1.1 2017/02/17 16:02:31 david Exp $ */
+/* $Id: xpl_scanner.l,v 1.2 2017/04/19 21:41:27 ist178013 Exp $ */
 // make relevant includes before including the parser's tab file
 #include <string>
 #include <cdk/ast/sequence_node.h>
