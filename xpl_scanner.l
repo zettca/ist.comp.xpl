@@ -1,7 +1,7 @@
 %option c++ yyclass="xpl_scanner" outfile="xpl_scanner.cpp"
 %option stack noyywrap yylineno 8bit
 %{ 
-/* $Id: xpl_scanner.l,v 1.2 2017/04/19 21:41:27 ist178013 Exp $ */
+/* $Id: xpl_scanner.l,v 1.3 2017/04/20 03:07:23 ist178013 Exp $ */
 // make relevant includes before including the parser's tab file
 #include <string>
 #include <cdk/ast/sequence_node.h>
@@ -15,18 +15,18 @@
 %x X_STRING
 %%
 
-"--".*                 ; /* ignore comments */
+"//".*                 ; /* ignore comments */
 
-">="                   return tGE; 
-"<="                   return tLE; 
-"=="                   return tEQ; 
-"!="                   return tNE; 
+">="                   return tGE;
+"<="                   return tLE;
+"=="                   return tEQ;
+"!="                   return tNE;
 
-"while"                return tWHILE; 
-"if"                   return tIF; 
-"else"                 return tELSE; 
-"print"                return tPRINT; 
-"read"                 return tREAD; 
+"while"                return tWHILE;
+"sweep"                return tSWEEP;
+"if"                   return tIF;
+"else"                 return tELSE;
+"elsif"                return tELSIF;
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 

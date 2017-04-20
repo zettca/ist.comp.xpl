@@ -1,5 +1,5 @@
 %{
-// $Id: xpl_parser.y,v 1.3 2017/04/19 21:41:27 ist178013 Exp $
+// $Id: xpl_parser.y,v 1.4 2017/04/20 03:07:23 ist178013 Exp $
 //-- don't change *any* of these: if you do, you'll break the compiler.
 #include <cdk/compiler.h>
 #include "ast/all.h"
@@ -22,9 +22,10 @@
 
 %token <i> tINTEGER
 %token <s> tIDENTIFIER tSTRING
-%token tWHILE tIF tPRINT tREAD tBEGIN tEND
+%token tWHILE tIF tSWEEP
 
 %nonassoc tIFX
+%nonassoc tELSIF
 %nonassoc tELSE
 
 %right '='
@@ -48,8 +49,8 @@ list : stmt      { $$ = new cdk::sequence_node(LINE, $1); }
      ;
 
 stmt : expr ';'                         { $$ = new xpl::evaluation_node(LINE, $1); }
-     | tPRINT expr ';'                  { $$ = new xpl::print_node(LINE, $2); }
-     | tREAD lval ';'                   { $$ = new xpl::read_node(LINE, $2); }
+     | expr '!'                         { $$ = new xpl::print_node(LINE, $1); }
+     | expr '!!'                        { $$ = new xpl::print_node(LINE, $1); }
      | tWHILE '(' expr ')' stmt         { $$ = new xpl::while_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt %prec tIFX { $$ = new xpl::if_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt tELSE stmt { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
