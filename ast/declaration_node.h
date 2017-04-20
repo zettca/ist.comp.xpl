@@ -3,6 +3,7 @@
 
 #include <cdk/ast/basic_node.h>
 #include <cdk/ast/lvalue_node.h>
+#include <cdk/basic_type.h>
 
 namespace xpl {
 
@@ -11,11 +12,11 @@ namespace xpl {
    */
   class declaration_node: public cdk::basic_node {
     std::string *_qualifier;
-    std::string *_type;
+    basic_type *_type;
     std::string *_identifier;
 
   public:
-    inline declaration_node(int lineno, std::string *qual, std::string *type, std::string *id) :
+    inline declaration_node(int lineno, std::string *qual, basic_type *type, std::string *id) :
         cdk::basic_node(lineno), _qualifier(qual), _type(type), _identifier(id) {
     }
 
@@ -23,7 +24,7 @@ namespace xpl {
     inline std::string *qualifier() {
       return _qualifier;
     }
-    inline std::string *type() {
+    inline basic_type *type() {
       return _type;
     }
     inline std::string *identifier() {
