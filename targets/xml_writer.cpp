@@ -172,26 +172,58 @@ void xpl::xml_writer::do_if_else_node(xpl::if_else_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 
-void xpl::xml_writer::do_sweep_up_node(xpl::sweep_up_node * const node, int lvl) {}
+void xpl::xml_writer::do_sweep_up_node(xpl::sweep_up_node * const node, int lvl) {
 
-void xpl::xml_writer::do_sweep_down_node(xpl::sweep_down_node * const node, int lvl) {}
+}
 
-void xpl::xml_writer::do_stop_node(xpl::stop_node * const node, int lvl) {}
+void xpl::xml_writer::do_sweep_down_node(xpl::sweep_down_node * const node, int lvl) {
 
-void xpl::xml_writer::do_next_node(xpl::next_node * const node, int lvl) {}
+}
 
-void xpl::xml_writer::do_return_node(xpl::return_node * const node, int lvl) {}
+void xpl::xml_writer::do_stop_node(xpl::stop_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  closeTag(node, lvl);
+}
 
-void xpl::xml_writer::do_declaration_node(xpl::declaration_node * const node, int lvl) {}
+void xpl::xml_writer::do_next_node(xpl::next_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  closeTag(node, lvl);
+}
 
-void xpl::xml_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {}
+void xpl::xml_writer::do_return_node(xpl::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  closeTag(node, lvl);
+}
 
-void xpl::xml_writer::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {}
+void xpl::xml_writer::do_declaration_node(xpl::declaration_node * const node, int lvl) {
 
-void xpl::xml_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {}
+}
 
-void xpl::xml_writer::do_block_node(xpl::block_node * const node, int lvl) {}
+void xpl::xml_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {
 
-void xpl::xml_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
+}
 
-void xpl::xml_writer::do_identity_node(xpl::identity_node * const node, int lvl) {}
+void xpl::xml_writer::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {
+
+}
+
+void xpl::xml_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {
+
+}
+
+void xpl::xml_writer::do_block_node(xpl::block_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  closeTag(node, lvl);
+}
+
+void xpl::xml_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {
+
+}
+
+void xpl::xml_writer::do_identity_node(xpl::identity_node * const node, int lvl) {
+
+}

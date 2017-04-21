@@ -1,5 +1,5 @@
 %{
-// $Id: xpl_parser.y,v 1.6 2017/04/21 15:06:00 ist178013 Exp $
+// $Id: xpl_parser.y,v 1.7 2017/04/21 15:52:43 ist178013 Exp $
 //-- don't change *any* of these: if you do, you'll break the compiler.
 #include <cdk/compiler.h>
 #include "ast/all.h"
@@ -38,9 +38,9 @@
 %left '*' '/' '%'
 %nonassoc tUNARY
 
-%type <node> block decl var func inst
+%type <node> block decl var func inst iter cond
 %type <sequence> file decls insts args
-%type <expression> expr lit
+%type <expression> expr lit 
 %type <lvalue> lval
 %type <type> type
 
@@ -71,21 +71,21 @@ var   : type tIDENTIFIER          { $$ = new xpl::declaration_node(LINE, nullptr
       | tUSE type tIDENTIFIER     { $$ = new xpl::declaration_node(LINE, $1, $2, $3); }
       ;
 
-args  : var                     { $$ = new cdk::sequence_node(LINE, $1); }
-      | args ',' var            { $$ = new cdk::sequence_node(LINE, $3 ,$1); }
-      ;
-
-func  : tUSE type tIDENTIFIER '(' ')'                       { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, nullptr); }
+func  : type tIDENTIFIER '(' ')'                            { $$ = new xpl::function_declaration_node(LINE, nullptr, $1, $2, nullptr); }
+      | type tIDENTIFIER '(' args ')'                       { $$ = new xpl::function_declaration_node(LINE, nullptr, $1, $2, $4); }
+      | tUSE type tIDENTIFIER '(' ')'                       { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, nullptr); }
       | tUSE type tIDENTIFIER '(' args ')'                  { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, $5); }
       | tPUBLIC type tIDENTIFIER '(' ')'                    { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, nullptr); }
       | tPUBLIC type tIDENTIFIER '(' args ')'               { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, $5); }
-      | type tIDENTIFIER '(' ')'                            { $$ = new xpl::function_declaration_node(LINE, nullptr, $1, $2, nullptr); }
-      | type tIDENTIFIER '(' args ')'                       { $$ = new xpl::function_declaration_node(LINE, nullptr, $1, $2, $4); }
 
       | type tIDENTIFIER '(' args ')' block                 { $$ = new xpl::function_definition_node(LINE, nullptr, $1, $2, $4, $6, nullptr); }
       | tPUBLIC type tIDENTIFIER '(' args ')' block         { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, $7, nullptr); }
       | type tIDENTIFIER '(' args ')' '=' lit block         { $$ = new xpl::function_definition_node(LINE, nullptr, $1, $2, $4, $8, $7); }
       | tPUBLIC type tIDENTIFIER '(' args ')' '=' lit block { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, $9, $8); }
+      ;
+
+args  : var                     { $$ = new cdk::sequence_node(LINE, $1); }
+      | args ',' var            { $$ = new cdk::sequence_node(LINE, $3 ,$1); }
       ;
 
 block : '{' decls '}'           { $$ = new xpl::block_node(LINE, $2, nullptr); }
@@ -103,40 +103,47 @@ inst  : expr ';'                { $$ = new xpl::evaluation_node(LINE, $1); }
       | tNEXT                   { $$ = new xpl::next_node(LINE); }
       | tSTOP                   { $$ = new xpl::stop_node(LINE); }
       | tRETURN                 { $$ = new xpl::return_node(LINE); }
-      | tIF '(' expr ')' inst %prec tIFX                          { $$ = new xpl::if_node(LINE, $3, $5); }
-      | tIF '(' expr ')' inst tELSE inst                          { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
-      | tWHILE '(' expr ')' inst                                  { $$ = new xpl::while_node(LINE, $3, $5); }
+      | cond                    { $$ = $1; }
+      | iter                    { $$ = $1; }
+      | block                   { $$ = $1; }
+      ;
+
+cond  : tIF '(' expr ')' inst %prec tIFX          { $$ = new xpl::if_node(LINE, $3, $5); }
+      | tIF '(' expr ')' inst tELSE inst          { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
+      ;
+
+iter  :  tWHILE '(' expr ')' inst                                 { $$ = new xpl::while_node(LINE, $3, $5); }
       | tSWEEP '+' '(' lval ':' expr ':' expr ')' inst            { $$ = new xpl::sweep_up_node(LINE, $4, $6, $8, nullptr, $10); }
       | tSWEEP '+' '(' lval ':' expr ':' expr ':' expr ')' inst   { $$ = new xpl::sweep_up_node(LINE, $4, $6, $8, $10, $12); }
       | tSWEEP '-' '(' lval ':' expr ':' expr ')' inst            { $$ = new xpl::sweep_down_node(LINE, $4, $6, $8, nullptr, $10); }
       | tSWEEP '-' '(' lval ':' expr ':' expr ':' expr ')' inst   { $$ = new xpl::sweep_down_node(LINE, $4, $6, $8, $10, $12); }
-      | block                   { $$ = $1; }
       ;
 
-lit   : tREAL                   { $$ = new cdk::double_node(LINE, $1); }
-      | tINTEGER                { $$ = new cdk::integer_node(LINE, $1); }
-      | tSTRING                 { $$ = new cdk::string_node(LINE, $1); }
+lit   : tREAL                     { $$ = new cdk::double_node(LINE, $1); }
+      | tINTEGER                  { $$ = new cdk::integer_node(LINE, $1); }
+      | tSTRING                   { $$ = new cdk::string_node(LINE, $1); }
       ;
 
-expr  : lit                     { $$ = $1; }
-      | '-' expr %prec tUNARY   { $$ = new cdk::neg_node(LINE, $2); }
-      | expr '+' expr           { $$ = new cdk::add_node(LINE, $1, $3); }
-      | expr '-' expr           { $$ = new cdk::sub_node(LINE, $1, $3); }
-      | expr '*' expr           { $$ = new cdk::mul_node(LINE, $1, $3); }
-      | expr '/' expr           { $$ = new cdk::div_node(LINE, $1, $3); }
-      | expr '%' expr           { $$ = new cdk::mod_node(LINE, $1, $3); }
-      | expr '<' expr           { $$ = new cdk::lt_node(LINE, $1, $3); }
-      | expr '>' expr           { $$ = new cdk::gt_node(LINE, $1, $3); }
-      | expr tGE expr           { $$ = new cdk::ge_node(LINE, $1, $3); }
-      | expr tLE expr           { $$ = new cdk::le_node(LINE, $1, $3); }
-      | expr tNE expr           { $$ = new cdk::ne_node(LINE, $1, $3); }
-      | expr tEQ expr           { $$ = new cdk::eq_node(LINE, $1, $3); }
-      | '(' expr ')'            { $$ = $2; }
-      | lval                    { $$ = new cdk::rvalue_node(LINE, $1); }  //FIXME
-      | lval '=' expr           { $$ = new cdk::assignment_node(LINE, $1, $3); }
+expr  : lit                       { $$ = $1; }
+      | '-' expr %prec tUNARY     { $$ = new cdk::neg_node(LINE, $2); }
+      | expr '+' expr             { $$ = new cdk::add_node(LINE, $1, $3); }
+      | expr '-' expr             { $$ = new cdk::sub_node(LINE, $1, $3); }
+      | expr '*' expr             { $$ = new cdk::mul_node(LINE, $1, $3); }
+      | expr '/' expr             { $$ = new cdk::div_node(LINE, $1, $3); }
+      | expr '%' expr             { $$ = new cdk::mod_node(LINE, $1, $3); }
+      | expr '<' expr             { $$ = new cdk::lt_node(LINE, $1, $3); }
+      | expr '>' expr             { $$ = new cdk::gt_node(LINE, $1, $3); }
+      | expr tGE expr             { $$ = new cdk::ge_node(LINE, $1, $3); }
+      | expr tLE expr             { $$ = new cdk::le_node(LINE, $1, $3); }
+      | expr tNE expr             { $$ = new cdk::ne_node(LINE, $1, $3); }
+      | expr tEQ expr             { $$ = new cdk::eq_node(LINE, $1, $3); }
+      | '(' expr ')'              { $$ = $2; }
+      | lval                      { $$ = new cdk::rvalue_node(LINE, $1); }  //FIXME
+      | lval '=' expr             { $$ = new cdk::assignment_node(LINE, $1, $3); }
+      | tIDENTIFIER '(' args ')'  { $$ = new xpl::function_call_node(LINE, $1, $3); }
       ;
 
-lval  : tIDENTIFIER             { $$ = new cdk::identifier_node(LINE, $1); }
+lval  : tIDENTIFIER               { $$ = new cdk::identifier_node(LINE, $1); }
       ;
 
 %%
