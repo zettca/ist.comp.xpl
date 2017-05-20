@@ -13,45 +13,55 @@
 #define yyerror LexerError
 %}
 
-DEC     [0-9]
-HEX     [0-9A-Fa-f]
+D0      [0-9]
+D1      [1-9]
+DEC     "0"|{D1}{D0}*
+HEX     [{D0}A-Fa-f]
+EXP     [eE][-+]?{DEC}
 
 %x X_STRING X_ESCAPE X_IGNORE X_COMMENT
 %%
 
     { set_debug(1); }
 
-"//".*                  ; /* ignore comments */
-"/*"                    yy_push_state(X_COMMENT);
-<X_COMMENT>"*/"         yy_pop_state();
-<X_COMMENT>.            ;
-<X_COMMENT>\n           ;
+"//".*              ;
+"/*"                yy_push_state(X_COMMENT);
+<X_COMMENT>"*/"     yy_pop_state();
+<X_COMMENT>.        ;
+<X_COMMENT>\n       ;
 
-">="                   return tGE;
-"<="                   return tLE;
-"=="                   return tEQ;
-"!="                   return tNE;
+">="              return tGE;
+"<="              return tLE;
+"=="              return tEQ;
+"!="              return tNE;
 
-"if"                   return tIF;
-"elsif"                return tELSIF;
-"else"                 return tELSE;
-"while"                return tWHILE;
-"sweep"                return tSWEEP;
+"if"              return tIF;
+"elsif"           return tELSIF;
+"else"            return tELSE;
+"while"           return tWHILE;
+"sweep"           return tSWEEP;
 
-"null"                 return tNULL;
-"int"                  return tTYPEINT;
-"real"                 return tTYPEREAL;
-"string"               return tTYPESTRING;
-"procedure"            return tPROCEDURE;
+"null"            return tNULL;
+"inteiro"         return tTYPEINT;
+"real"            return tTYPEREAL;
+"string"          return tTYPESTRING;
+"procedure"       return tPROCEDURE;
 
-"use"                  return tUSE;
-"public"               return tPUBLIC;
+"use"             return tUSE;
+"public"          return tPUBLIC;
 
-"next"                 return tNEXT;
-"stop"                 return tSTOP;
-"return"               return tRETURN;
+"next"            return tNEXT;
+"stop"            return tSTOP;
+"return"          return tRETURN;
 
-[A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
+
+[_[:alpha:]][_[:alnum:]]*   yylval.s = new std::string(yytext); return tIDENTIFIER;
+
+"0x"{HEX}+                  yylval.i = strtol(yytext, nullptr, 16); return tINTEGER;
+{DEC}                       yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
+
+{DEC}{EXP}                  yylval.r = strtod(yytext, nullptr); return tREAL;
+{DEC}?"."{D0}+{EXP}?        yylval.r = strtod(yytext, nullptr); return tREAL;
 
 \"                     yy_push_state(X_STRING); yylval.s = new std::string("");
 <X_STRING>\"           yy_pop_state(); return tSTRING;
@@ -68,11 +78,8 @@ HEX     [0-9A-Fa-f]
 <X_ESCAPE>.            yy_pop_state();
 
 <X_IGNORE>\"           yy_pop_state();
-<X_IGNORE>.            ;
-<X_IGNORE>\n           ;
+<X_IGNORE>.|\n         ;
 
-{DEC}*\.{DEC}+([eE][-+]?{DEC}+)?    yylval.r = strtod(yytext, nullptr); return tREAL;
-{HEX}+                              yylval.i = strtol(yytext, nullptr, 16); return tINTEGER;
 
 [-()<>=+*/%;{}.]       return *yytext;
 

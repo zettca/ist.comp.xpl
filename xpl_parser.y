@@ -60,7 +60,7 @@ decl  : var ';'       { $$ = $1; }
       | func          { $$ = $1; }
       ;
 
-type  : tTYPESTRING   { $$ = new basic_type(4, basic_type::TYPE_STRING); } /* 4 bytes? */
+type  : tTYPESTRING   { $$ = new basic_type(4, basic_type::TYPE_STRING); }
       | tTYPEREAL     { $$ = new basic_type(8, basic_type::TYPE_DOUBLE); }
       | tTYPEINT      { $$ = new basic_type(4, basic_type::TYPE_INT); }
       | '[' type ']'  { $$ = new basic_type(4, basic_type::TYPE_POINTER); }
@@ -112,7 +112,7 @@ cond  : tIF '(' expr ')' inst %prec tIFX          { $$ = new xpl::if_node(LINE, 
       | tIF '(' expr ')' inst tELSE inst          { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
       ;
 
-iter  :  tWHILE '(' expr ')' inst                                 { $$ = new xpl::while_node(LINE, $3, $5); }
+iter  : tWHILE '(' expr ')' inst                                  { $$ = new xpl::while_node(LINE, $3, $5); }
       | tSWEEP '+' '(' lval ':' expr ':' expr ')' inst            { $$ = new xpl::sweep_up_node(LINE, $4, $6, $8, nullptr, $10); }
       | tSWEEP '+' '(' lval ':' expr ':' expr ':' expr ')' inst   { $$ = new xpl::sweep_up_node(LINE, $4, $6, $8, $10, $12); }
       | tSWEEP '-' '(' lval ':' expr ':' expr ')' inst            { $$ = new xpl::sweep_down_node(LINE, $4, $6, $8, nullptr, $10); }
