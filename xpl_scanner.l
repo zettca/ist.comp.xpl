@@ -53,6 +53,9 @@ EXP     [eE][-+]?{DEC}
 "stop"            return tSTOP;
 "return"          return tRETURN;
 
+"["               return tBOP;
+"]"               return tBCL;
+
 
 [_[:alpha:]][_[:alnum:]]*   yylval.s = new std::string(yytext); return tIDENTIFIER;
 

@@ -26,7 +26,7 @@
 %token tWHILE tIF tELSIF tELSE tSWEEP tNULL
 %token tNEXT tSTOP tRETURN
 
-%nonassoc tIFX tELSE
+%nonassoc tIFX tELSE tSTRCAT
 %nonassoc tINTEGER tREAL tSTRING tIDENTIFIER
 %right '='
 %left tGE tLE tEQ tNE '>' '<'
@@ -37,8 +37,8 @@
 %nonassoc tUNARY '~'
 %nonassoc tPUBLIC tUSE tVOID
 %nonassoc tSTOP tNEXT tRETURN tNULL tTYPEINT tTYPEREAL tTYPESTRING
-%left '{' '(' '['
-%right '}' ')' ']'
+%left tBOP '{' '('
+%right tBCL '}' ')'
 
 %type <node> block decl var func inst iter cond
 %type <sequence> file decls insts vars args
@@ -63,11 +63,11 @@ decl  : var ';'       { $$ = $1; }
       | func          { $$ = $1; }
       ;
 
-type  : tTYPESTRING   { $$ = new basic_type(4, basic_type::TYPE_STRING); }
-      | tTYPEREAL     { $$ = new basic_type(8, basic_type::TYPE_DOUBLE); }
-      | tTYPEINT      { $$ = new basic_type(4, basic_type::TYPE_INT); }
-      | tVOID         { $$ = new basic_type(4, basic_type::TYPE_VOID); }
-      | '[' type ']'  { $$ = new basic_type(4, basic_type::TYPE_POINTER); }
+type  : tTYPESTRING     { $$ = new basic_type(4, basic_type::TYPE_STRING); }
+      | tTYPEREAL       { $$ = new basic_type(8, basic_type::TYPE_DOUBLE); }
+      | tTYPEINT        { $$ = new basic_type(4, basic_type::TYPE_INT); }
+      | tVOID           { $$ = new basic_type(4, basic_type::TYPE_VOID); }
+      | tBOP type tBCL  { $$ = new basic_type(4, basic_type::TYPE_POINTER); }
       ;
 
 qual  : tUSE          { $$ = $1; }
@@ -132,9 +132,9 @@ strg  : tSTRING         { $$ = $1; }
       | strg tSTRING    { $$ = new std::string(*$1 + *$2); delete $1; delete $2; }
       ;
 
-lit   : tREAL           { $$ = new cdk::double_node(LINE, $1); }
-      | tINTEGER        { $$ = new cdk::integer_node(LINE, $1); }
-      | strg            { $$ = new cdk::string_node(LINE, $1); }
+lit   : tREAL                     { $$ = new cdk::double_node(LINE, $1); }
+      | tINTEGER                  { $$ = new cdk::integer_node(LINE, $1); }
+      | strg %prec tSTRCAT        { $$ = new cdk::string_node(LINE, $1); }
       ;
 
 expr  : lit                       { $$ = $1; }
