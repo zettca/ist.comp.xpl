@@ -155,26 +155,41 @@ void xpl::type_checker::do_read_node(xpl::read_node * const node, int lvl) {
 
 void xpl::type_checker::do_while_node(xpl::while_node * const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
+  node->block()->accept(this, lvl + 4);
 }
 
 //---------------------------------------------------------------------------
 
 void xpl::type_checker::do_if_node(xpl::if_node * const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
+  node->block()->accept(this, lvl + 4);
 }
 
 void xpl::type_checker::do_if_else_node(xpl::if_else_node * const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
+  node->thenblock()->accept(this, lvl + 4);
+  node->elseblock()->accept(this, lvl + 4);
 }
 
 void xpl::type_checker::do_sweep_node(xpl::sweep_node * const node, int lvl) {
   node->iterable()->accept(this, lvl + 4);
+  if (node->iterable()->type()->name() != basic_type::TYPE_INT)
+    throw "iterable must be an integer";
+
   node->initial_value()->accept(this, lvl + 4);
+  if (node->initial_value()->type()->name() != basic_type::TYPE_INT)
+    throw "initial value must be an integer";
+
   node->final_value()->accept(this, lvl + 4);
+  if (node->final_value()->type()->name() != basic_type::TYPE_INT)
+    throw "final value must be an integer";
+
   node->increment()->accept(this, lvl + 4);
+  if (node->final_value()->type()->name() != basic_type::TYPE_INT)
+    throw "final value must be an integer";
+
   node->block()->accept(this, lvl + 4);
 }
-
 
 void xpl::type_checker::do_stop_node(xpl::stop_node * const node, int lvl) { /* empty */ }
 
@@ -182,18 +197,89 @@ void xpl::type_checker::do_next_node(xpl::next_node * const node, int lvl) { /* 
 
 void xpl::type_checker::do_return_node(xpl::return_node * const node, int lvl) { /* empty */ }
 
-void xpl::type_checker::do_declaration_node(xpl::declaration_node * const node, int lvl) {}
+void xpl::type_checker::do_declaration_node(xpl::declaration_node * const node, int lvl) {
+  if (node->type()->name() == basic_type::TYPE_VOID)
+    throw "type cannot be void/procedure";
 
-void xpl::type_checker::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {}
+  std::string *id = node->identifier();
+  std::shared_ptr<xpl::symbol> symbol = _symtab.find_local(*id);
 
-void xpl::type_checker::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {}
+  if (symbol == nullptr){
+    _symtab.insert(*id, std::make_shared<xpl::symbol>(node->type(), *id, 0));
+  } else {
+    throw "attempted to redefine " + *id;
+  }
 
-void xpl::type_checker::do_function_call_node(xpl::function_call_node * const node, int lvl) {}
+  if (node->value() != nullptr) {
+    node->value()->accept(this, lvl + 2);
+    if (node->type()->name() != node->value()->type()->name())
+      throw "type and value do not match";
+  }
+}
 
-void xpl::type_checker::do_block_node(xpl::block_node * const node, int lvl) {}
+void xpl::type_checker::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {
+  if (node->arguments() != nullptr) {
+    for (size_t i = 0; i < node->arguments()->size(); i++) {
+      xpl::declaration_node *arg = (xpl::declaration_node*) node->arguments()->node(i);
+      if (arg->qualifier() != nullptr)
+        throw "arguments cannot have public/use modifiers";
+    }
+  }
+
+  std::string id = *node->identifier();
+  if (_symtab.find(id) != nullptr)
+    throw "attempted to redefine " + id;
+}
+
+void xpl::type_checker::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {
+  if (node->arguments() != nullptr) {
+    for (size_t i = 0; i < node->arguments()->size(); i++) {
+      xpl::declaration_node *arg = (xpl::declaration_node*) node->arguments()->node(i);
+      if (arg->qualifier() != nullptr)
+        throw "arguments cannot have public/use modifiers";
+    }
+  }
+
+  if (node->ret_val() != nullptr) {
+    node->ret_val()->accept(this, lvl);
+    if (node->ret_val()->type()->name() != node->type()->name())
+      throw "type and return value do not match";
+  }
+
+  std::string id = *node->identifier();
+  if (_symtab.find(id) != nullptr)
+    throw "attempted to redefine " + id;
+}
+
+void xpl::type_checker::do_function_call_node(xpl::function_call_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+}
+
+void xpl::type_checker::do_block_node(xpl::block_node * const node, int lvl) {
+  if (node->declarations() != nullptr) node->declarations()->accept(this, lvl);
+  if (node->instructions() != nullptr) node->instructions()->accept(this, lvl);
+}
 
 void xpl::type_checker::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
 
-void xpl::type_checker::do_identity_node(xpl::identity_node * const node, int lvl) {}
+void xpl::type_checker::do_identity_node(xpl::identity_node * const node, int lvl) {
+  if (node->argument()->type()->name() != basic_type::TYPE_INT &&
+      node->argument()->type()->name() != basic_type::TYPE_DOUBLE)
+    throw "identity operator is only valid for numbers";
+}
 
-void xpl::type_checker::do_index_node(xpl::index_node * const node, int lvl) {}
+void xpl::type_checker::do_symmetry_node(xpl::symmetry_node * const node, int lvl) {
+  if (node->argument()->type()->name() != basic_type::TYPE_INT &&
+      node->argument()->type()->name() != basic_type::TYPE_DOUBLE)
+      throw "symmetry operator is only valid for numbers";
+}
+
+void xpl::type_checker::do_index_node(xpl::index_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+  std::string id = *node->identifier();
+  if (_symtab.find(id) == nullptr)
+    throw "variable " + id + " is not defined";
+
+  if (node->offset()->type()->name() != basic_type::TYPE_INT)
+    throw "offset expression must be an integer";
+}

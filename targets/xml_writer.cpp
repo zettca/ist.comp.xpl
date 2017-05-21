@@ -224,6 +224,10 @@ void xpl::xml_writer::do_identity_node(xpl::identity_node * const node, int lvl)
 
 }
 
+void xpl::xml_writer::do_symmetry_node(xpl::symmetry_node * const node, int lvl) {
+
+}
+
 void xpl::xml_writer::do_index_node(xpl::index_node * const node, int lvl) {
 
 }

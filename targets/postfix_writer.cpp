@@ -231,14 +231,42 @@ void xpl::postfix_writer::do_declaration_node(xpl::declaration_node * const node
 
 void xpl::postfix_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {}
 
-void xpl::postfix_writer::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {}
+void xpl::postfix_writer::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  _pf.TEXT();
+  _pf.ALIGN();
 
-void xpl::postfix_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {}
+  if (*node->identifier() == "xpl") { // xpl main function
+    _pf.GLOBAL("_main", _pf.FUNC());
+    _pf.LABEL("_main");
+    _pf.ENTER(0);
+  } else {
+    _pf.GLOBAL(*node->identifier(), _pf.FUNC());
+    _pf.LABEL(*node->identifier());
+    _pf.ENTER(0);
+  }
+
+  node->block()->accept(this, lvl + 2);
+
+  // TODO stuff
+
+  _pf.POP();
+  _pf.LEAVE();
+  _pf.RET();
+}
+
+void xpl::postfix_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+
+}
 
 void xpl::postfix_writer::do_block_node(xpl::block_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_identity_node(xpl::identity_node * const node, int lvl) {}
+
+void xpl::postfix_writer::do_symmetry_node(xpl::symmetry_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_index_node(xpl::index_node * const node, int lvl) {}

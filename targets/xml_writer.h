@@ -102,6 +102,7 @@ namespace xpl {
     void do_block_node(xpl::block_node * const node, int lvl);
     void do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl);
     void do_identity_node(xpl::identity_node * const node, int lvl);
+    void do_symmetry_node(xpl::symmetry_node * const node, int lvl);
     void do_index_node(xpl::index_node * const node, int lvl);
 
   };
