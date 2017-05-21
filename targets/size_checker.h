@@ -8,7 +8,7 @@
 
 namespace xpl {
 
-  class size_checker {
+  class size_checker : public basic_ast_visitor {
   private:
     int _size;
 
@@ -16,7 +16,6 @@ namespace xpl {
     size_checker (std::shared_ptr<cdk::compiler> compiler) :
       basic_ast_visitor(compiler), _size(0) {}
     ~size_checker () {
-      os().flush();
     }
 
   public:
@@ -74,3 +73,5 @@ namespace xpl {
   };
 
 } // xpl
+
+#endif
