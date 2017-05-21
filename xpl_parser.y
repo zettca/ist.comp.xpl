@@ -21,9 +21,10 @@
 
 %token <i> tINTEGER
 %token <r> tREAL
-%token <s> tIDENTIFIER tSTRING tUSE tPUBLIC
+%token <s> tIDENTIFIER tSTRING tUSE tPUBLIC tPLINE "+" '-'
+%token <type> tTYPEINT tTYPEREAL tTYPESTRING tPROCEDURE
 %token tWHILE tIF tSWEEP tNULL
-%token tTYPEINT tTYPEREAL tTYPESTRING tPROCEDURE tNEXT tSTOP tRETURN
+%token tNEXT tSTOP tRETURN
 
 %nonassoc tIFX
 %nonassoc tELSIF
@@ -35,13 +36,16 @@
 %left '*' '/' '%'
 %left '|' '&'
 %nonassoc tUNARY '~'
+%nonassoc tPUBLIC tUSE tPROCEDURE
+%left '{' '(' '['
+%right '}' ')' ']'
 
 %type <node> block decl var func inst iter cond
 %type <sequence> file decls insts vars args
 %type <expression> expr lit 
 %type <lvalue> lval
-%type <type> type typef
-%type <s> qual
+%type <type> type
+%type <s> qual sdir
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
@@ -62,11 +66,8 @@ decl  : var ';'       { $$ = $1; }
 type  : tTYPESTRING   { $$ = new basic_type(4, basic_type::TYPE_STRING); }
       | tTYPEREAL     { $$ = new basic_type(8, basic_type::TYPE_DOUBLE); }
       | tTYPEINT      { $$ = new basic_type(4, basic_type::TYPE_INT); }
+      | tPROCEDURE    { $$ = new basic_type(4, basic_type::TYPE_VOID); }
       | '[' type ']'  { $$ = new basic_type(4, basic_type::TYPE_POINTER); }
-      ;
-
-typef : tPROCEDURE    { $$ = new basic_type(4, basic_type::TYPE_VOID); }
-      | type          { $$ = $1; }
       ;
 
 qual  : tUSE          { $$ = $1; }
@@ -78,51 +79,53 @@ var   : qual type tIDENTIFIER           { $$ = new xpl::declaration_node(LINE, $
       | qual type tIDENTIFIER '=' expr  { $$ = new xpl::declaration_node(LINE, $1, $2, $3); }
       ;
 
-func  : qual typef tIDENTIFIER '(' args ')'                 { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, $5); }
+func  : qual type tIDENTIFIER '(' args ')'                  { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, $5); }
 
-      | qual typef tIDENTIFIER '(' args ')' block           { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, $7, nullptr); }
-      | qual typef tIDENTIFIER '(' args ')' '=' lit         { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, nullptr, $8); }
-      | qual typef tIDENTIFIER '(' args ')' '=' lit block   { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, $9, $8); }
+      | qual type tIDENTIFIER '(' args ')' block            { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, $7, nullptr); }
+      | qual type tIDENTIFIER '(' args ')' '=' lit          { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, nullptr, $8); }
+      | qual type tIDENTIFIER '(' args ')' '=' lit block    { $$ = new xpl::function_definition_node(LINE, $1, $2, $3, $5, $9, $8); }
       ;
 
 args  : vars    { $$ = $1; }
       |         { $$ = nullptr; }
       ;
 
-vars  : var                     { $$ = new cdk::sequence_node(LINE, $1); }
-      | vars ',' var            { $$ = new cdk::sequence_node(LINE, $3 ,$1); }
+vars  : var                   { $$ = new cdk::sequence_node(LINE, $1); }
+      | vars ',' var          { $$ = new cdk::sequence_node(LINE, $3 ,$1); }
       ;
 
-block : '{' '}'                 { $$ = new xpl::block_node(LINE, nullptr, nullptr); }
-      | '{' decls '}'           { $$ = new xpl::block_node(LINE, $2, nullptr); }
-      | '{' insts '}'           { $$ = new xpl::block_node(LINE, nullptr, $2); }
-      | '{' decls insts '}'     { $$ = new xpl::block_node(LINE, $2, $3); }
+block : '{' '}'               { $$ = new xpl::block_node(LINE, nullptr, nullptr); }
+      | '{' decls '}'         { $$ = new xpl::block_node(LINE, $2, nullptr); }
+      | '{' insts '}'         { $$ = new xpl::block_node(LINE, nullptr, $2); }
+      | '{' decls insts '}'   { $$ = new xpl::block_node(LINE, $2, $3); }
       ;
 
-insts : inst                    { $$ = new cdk::sequence_node(LINE, $1); }
-      | insts inst              { $$ = new cdk::sequence_node(LINE, $2, $1); }
+insts : inst                  { $$ = new cdk::sequence_node(LINE, $1); }
+      | insts inst            { $$ = new cdk::sequence_node(LINE, $2, $1); }
       ;
 
-inst  : expr ';'                { $$ = new xpl::evaluation_node(LINE, $1); }
-      | expr '!'                { $$ = new xpl::print_node(LINE, $1); }
-      | expr '!!'               { $$ = new xpl::print_node(LINE, $1+'\n'); }
-      | tNEXT                   { $$ = new xpl::next_node(LINE); }
-      | tSTOP                   { $$ = new xpl::stop_node(LINE); }
-      | tRETURN                 { $$ = new xpl::return_node(LINE); }
-      | cond                    { $$ = $1; }
-      | iter                    { $$ = $1; }
-      | block                   { $$ = $1; }
+inst  : expr ';'              { $$ = new xpl::evaluation_node(LINE, $1); }
+      | expr '!'              { $$ = new xpl::print_node(LINE, $1); }
+      | expr tPLINE           { $$ = new xpl::print_node(LINE, $1+'\n'); }
+      | tNEXT                 { $$ = new xpl::next_node(LINE); }
+      | tSTOP                 { $$ = new xpl::stop_node(LINE); }
+      | tRETURN               { $$ = new xpl::return_node(LINE); }
+      | cond                  { $$ = $1; }
+      | iter                  { $$ = $1; }
+      | block                 { $$ = $1; }
       ;
 
 cond  : tIF '(' expr ')' inst %prec tIFX          { $$ = new xpl::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' inst tELSE inst          { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
       ;
 
-iter  : tWHILE '(' expr ')' inst                                  { $$ = new xpl::while_node(LINE, $3, $5); }
-      | tSWEEP '+' '(' lval ':' expr ':' expr ')' inst            { $$ = new xpl::sweep_up_node(LINE, $4, $6, $8, nullptr, $10); }
-      | tSWEEP '+' '(' lval ':' expr ':' expr ':' expr ')' inst   { $$ = new xpl::sweep_up_node(LINE, $4, $6, $8, $10, $12); }
-      | tSWEEP '-' '(' lval ':' expr ':' expr ')' inst            { $$ = new xpl::sweep_down_node(LINE, $4, $6, $8, nullptr, $10); }
-      | tSWEEP '-' '(' lval ':' expr ':' expr ':' expr ')' inst   { $$ = new xpl::sweep_down_node(LINE, $4, $6, $8, $10, $12); }
+sdir  : '+'  { $$ = $1; }
+      | '-'  { $$ = $1; }
+      ;
+
+iter  : tWHILE '(' expr ')' inst                                    { $$ = new xpl::while_node(LINE, $3, $5); }
+      | tSWEEP sdir '(' lval ':' expr ':' expr ')' inst             { $$ = new xpl::sweep_node(LINE, $2, $4, $6, $8, nullptr, $10); }
+      | tSWEEP sdir '(' lval ':' expr ':' expr ':' expr ')' inst    { $$ = new xpl::sweep_node(LINE, $2, $4, $6, $8, $10, $12); }
       ;
 
 lit   : tREAL                     { $$ = new cdk::double_node(LINE, $1); }
@@ -131,7 +134,6 @@ lit   : tREAL                     { $$ = new cdk::double_node(LINE, $1); }
       ;
 
 expr  : lit                       { $$ = $1; }
-      | lval '?'                  { /* TODO */ }
       | '-' expr %prec tUNARY     { $$ = new cdk::neg_node(LINE, $2); }
       | expr '+' expr             { $$ = new cdk::add_node(LINE, $1, $3); }
       | expr '-' expr             { $$ = new cdk::sub_node(LINE, $1, $3); }
@@ -148,13 +150,14 @@ expr  : lit                       { $$ = $1; }
       | expr '|' expr             { $$ = new cdk::or_node(LINE, $1, $3);}
       | expr '&' expr             { $$ = new cdk::or_node(LINE, $1, $3);}
       | '(' expr ')'              { $$ = $2; }
+      | lval '?'                  { /* TODO */ }
+      | lval '[' expr ']'         { $$ = new xpl::index_node(LINE, $1 ,$3); }
       | lval                      { $$ = new cdk::rvalue_node(LINE, $1); }  //FIXME
       | lval '=' expr             { $$ = new cdk::assignment_node(LINE, $1, $3); }
       | tIDENTIFIER '(' args ')'  { $$ = new xpl::function_call_node(LINE, $1, $3); }
       ;
 
 lval  : tIDENTIFIER               { $$ = new cdk::identifier_node(LINE, $1); }
-      | tIDENTIFIER '[' expr ']'  { $$ = new cdk::identifier_node(LINE, $1); } //FINISHME
       ;
 
 %%

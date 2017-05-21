@@ -32,6 +32,8 @@ EXP     [eE][-+]?{DEC}
 "=="              return tEQ;
 "!="              return tNE;
 
+"!!"              return tPLINE;
+
 "if"              return tIF;
 "elsif"           return tELSIF;
 "else"            return tELSE;
@@ -39,7 +41,7 @@ EXP     [eE][-+]?{DEC}
 "sweep"           return tSWEEP;
 
 "null"            return tNULL;
-"inteiro"         return tTYPEINT;
+"int"             return tTYPEINT;
 "real"            return tTYPEREAL;
 "string"          return tTYPESTRING;
 "procedure"       return tPROCEDURE;
