@@ -29,7 +29,7 @@ namespace xpl {
     inline std::string *identifier() { return _identifier; }
     inline cdk::sequence_node *arguments() { return _arguments; }
     inline cdk::basic_node *block() { return _block; }
-    inline cdk::basic_node *ret_val() { return _ret_val; }
+    inline cdk::expression_node *ret_val() { return _ret_val; }
 
     void accept(basic_ast_visitor *sp, int level) {
       sp->do_function_definition_node(this, level);

@@ -1,6 +1,6 @@
 %option c++ yyclass="xpl_scanner" outfile="xpl_scanner.cpp"
 %option stack noyywrap yylineno 8bit debug
-%{ 
+%{
 #include <string>
 #include <cdk/ast/sequence_node.h>
 #include <cdk/ast/expression_node.h>
@@ -44,7 +44,7 @@ EXP     [eE][-+]?{DEC}
 "int"             return tTYPEINT;
 "real"            return tTYPEREAL;
 "string"          return tTYPESTRING;
-"procedure"       return tPROCEDURE;
+"procedure"       return tVOID;
 
 "use"             return tUSE;
 "public"          return tPUBLIC;
@@ -77,7 +77,8 @@ EXP     [eE][-+]?{DEC}
 <X_ESCAPE>.            yy_pop_state();
 
 <X_IGNORE>\"           yy_pop_state();
-<X_IGNORE>.|\n         ;
+<X_IGNORE>.            ;
+<X_IGNORE>\n           ;
 
 
 [-()<>=+*/%;{}.]       return *yytext;

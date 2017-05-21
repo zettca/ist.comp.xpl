@@ -21,31 +21,31 @@
 
 %token <i> tINTEGER
 %token <r> tREAL
-%token <s> tIDENTIFIER tSTRING tUSE tPUBLIC tPLINE "+" '-'
-%token <type> tTYPEINT tTYPEREAL tTYPESTRING tPROCEDURE
-%token tWHILE tIF tSWEEP tNULL
+%token <s> tIDENTIFIER tSTRING tUSE tPUBLIC tPLINE tSTRG "+" '-'
+%token <type> tTYPEINT tTYPEREAL tTYPESTRING tVOID
+%token tWHILE tIF tELSIF tELSE tSWEEP tNULL
 %token tNEXT tSTOP tRETURN
 
-%nonassoc tIFX
-%nonassoc tELSIF
-%nonassoc tELSE
-
+%nonassoc tIFX tELSE
+%nonassoc tINTEGER tREAL tSTRING tIDENTIFIER
 %right '='
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
 %left '|' '&'
+%right tSTRG
 %nonassoc tUNARY '~'
-%nonassoc tPUBLIC tUSE tPROCEDURE
+%nonassoc tPUBLIC tUSE tVOID
+%nonassoc tSTOP tNEXT tRETURN tNULL tTYPEINT tTYPEREAL tTYPESTRING
 %left '{' '(' '['
 %right '}' ')' ']'
 
 %type <node> block decl var func inst iter cond
 %type <sequence> file decls insts vars args
-%type <expression> expr lit 
+%type <expression> expr lit
 %type <lvalue> lval
 %type <type> type
-%type <s> qual sdir
+%type <s> qual sdir strg
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
@@ -66,7 +66,7 @@ decl  : var ';'       { $$ = $1; }
 type  : tTYPESTRING   { $$ = new basic_type(4, basic_type::TYPE_STRING); }
       | tTYPEREAL     { $$ = new basic_type(8, basic_type::TYPE_DOUBLE); }
       | tTYPEINT      { $$ = new basic_type(4, basic_type::TYPE_INT); }
-      | tPROCEDURE    { $$ = new basic_type(4, basic_type::TYPE_VOID); }
+      | tVOID         { $$ = new basic_type(4, basic_type::TYPE_VOID); }
       | '[' type ']'  { $$ = new basic_type(4, basic_type::TYPE_POINTER); }
       ;
 
@@ -75,8 +75,8 @@ qual  : tUSE          { $$ = $1; }
       |               { $$ = nullptr; }
       ;
 
-var   : qual type tIDENTIFIER           { $$ = new xpl::declaration_node(LINE, $1, $2, $3); }
-      | qual type tIDENTIFIER '=' expr  { $$ = new xpl::declaration_node(LINE, $1, $2, $3); }
+var   : qual type tIDENTIFIER           { $$ = new xpl::declaration_node(LINE, $1, $2, $3, nullptr); }
+      | qual type tIDENTIFIER '=' expr  { $$ = new xpl::declaration_node(LINE, $1, $2, $3, $5); }
       ;
 
 func  : qual type tIDENTIFIER '(' args ')'                  { $$ = new xpl::function_declaration_node(LINE, $1, $2, $3, $5); }
@@ -128,9 +128,13 @@ iter  : tWHILE '(' expr ')' inst                                    { $$ = new x
       | tSWEEP sdir '(' lval ':' expr ':' expr ':' expr ')' inst    { $$ = new xpl::sweep_node(LINE, $2, $4, $6, $8, $10, $12); }
       ;
 
-lit   : tREAL                     { $$ = new cdk::double_node(LINE, $1); }
-      | tINTEGER                  { $$ = new cdk::integer_node(LINE, $1); }
-      | tSTRING                   { $$ = new cdk::string_node(LINE, $1); }
+strg  : tSTRING         { $$ = $1; }
+      | strg tSTRING    { $$ = new std::string(*$1 + *$2); delete $1; delete $2; }
+      ;
+
+lit   : tREAL           { $$ = new cdk::double_node(LINE, $1); }
+      | tINTEGER        { $$ = new cdk::integer_node(LINE, $1); }
+      | strg            { $$ = new cdk::string_node(LINE, $1); }
       ;
 
 expr  : lit                       { $$ = $1; }
@@ -150,14 +154,14 @@ expr  : lit                       { $$ = $1; }
       | expr '|' expr             { $$ = new cdk::or_node(LINE, $1, $3);}
       | expr '&' expr             { $$ = new cdk::or_node(LINE, $1, $3);}
       | '(' expr ')'              { $$ = $2; }
-      | lval '?'                  { /* TODO */ }
-      | lval '[' expr ']'         { $$ = new xpl::index_node(LINE, $1 ,$3); }
       | lval                      { $$ = new cdk::rvalue_node(LINE, $1); }  //FIXME
       | lval '=' expr             { $$ = new cdk::assignment_node(LINE, $1, $3); }
       | tIDENTIFIER '(' args ')'  { $$ = new xpl::function_call_node(LINE, $1, $3); }
       ;
 
 lval  : tIDENTIFIER               { $$ = new cdk::identifier_node(LINE, $1); }
+      | tIDENTIFIER '?'           { /* TODO */ }
+      | tIDENTIFIER '[' expr ']'  { $$ = new xpl::index_node(LINE, $1 ,$3); }
       ;
 
 %%

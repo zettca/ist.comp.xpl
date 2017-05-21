@@ -11,19 +11,19 @@ namespace xpl {
    * Class for describing index nodes.
    */
   class index_node: public cdk::lvalue_node {
-    cdk::lvalue_node *_variable;
+    std::string *_identifier;
     cdk::expression_node *_offset;
 
   public:
-    inline index_node(int lineno, cdk::lvalue_node *var, cdk::expression_node *offset) :
-        cdk::lvalue_node(lineno), _variable(var), _offset(offset) {
+    inline index_node(int lineno, std::string *id, cdk::expression_node *offset) :
+        cdk::lvalue_node(lineno), _identifier(id), _offset(offset) {
     }
 
   public:
-    inline cdk::expression_node *variable() {
-      return _variable;
+    inline std::string *identifier() {
+      return _identifier;
     }
-    inline cdk::basic_node *offset() {
+    inline cdk::expression_node *offset() {
       return _offset;
     }
 
