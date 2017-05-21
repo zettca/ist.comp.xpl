@@ -167,15 +167,20 @@ void xpl::type_checker::do_if_else_node(xpl::if_else_node * const node, int lvl)
   node->condition()->accept(this, lvl + 4);
 }
 
-void xpl::type_checker::do_sweep_up_node(xpl::sweep_up_node * const node, int lvl) {}
+void xpl::type_checker::do_sweep_node(xpl::sweep_node * const node, int lvl) {
+  node->iterable()->accept(this, lvl + 4);
+  node->initial_value()->accept(this, lvl + 4);
+  node->final_value()->accept(this, lvl + 4);
+  node->increment()->accept(this, lvl + 4);
+  node->block()->accept(this, lvl + 4);
+}
 
-void xpl::type_checker::do_sweep_down_node(xpl::sweep_down_node * const node, int lvl) {}
 
-void xpl::type_checker::do_stop_node(xpl::stop_node * const node, int lvl) {}
+void xpl::type_checker::do_stop_node(xpl::stop_node * const node, int lvl) { /* empty */ }
 
-void xpl::type_checker::do_next_node(xpl::next_node * const node, int lvl) {}
+void xpl::type_checker::do_next_node(xpl::next_node * const node, int lvl) { /* empty */ }
 
-void xpl::type_checker::do_return_node(xpl::return_node * const node, int lvl) {}
+void xpl::type_checker::do_return_node(xpl::return_node * const node, int lvl) { /* empty */ }
 
 void xpl::type_checker::do_declaration_node(xpl::declaration_node * const node, int lvl) {}
 
@@ -190,3 +195,5 @@ void xpl::type_checker::do_block_node(xpl::block_node * const node, int lvl) {}
 void xpl::type_checker::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
 
 void xpl::type_checker::do_identity_node(xpl::identity_node * const node, int lvl) {}
+
+void xpl::type_checker::do_index_node(xpl::index_node * const node, int lvl) {}

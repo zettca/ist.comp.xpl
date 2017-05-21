@@ -172,11 +172,7 @@ void xpl::xml_writer::do_if_else_node(xpl::if_else_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 
-void xpl::xml_writer::do_sweep_up_node(xpl::sweep_up_node * const node, int lvl) {
-
-}
-
-void xpl::xml_writer::do_sweep_down_node(xpl::sweep_down_node * const node, int lvl) {
+void xpl::xml_writer::do_sweep_node(xpl::sweep_node * const node, int lvl) {
 
 }
 
@@ -225,5 +221,9 @@ void xpl::xml_writer::do_memory_allocation_node(xpl::memory_allocation_node * co
 }
 
 void xpl::xml_writer::do_identity_node(xpl::identity_node * const node, int lvl) {
+
+}
+
+void xpl::xml_writer::do_index_node(xpl::index_node * const node, int lvl) {
 
 }

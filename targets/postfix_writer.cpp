@@ -219,9 +219,7 @@ void xpl::postfix_writer::do_if_else_node(xpl::if_else_node * const node, int lv
   _pf.LABEL(mklbl(lbl1 = lbl2));
 }
 
-void xpl::postfix_writer::do_sweep_up_node(xpl::sweep_up_node * const node, int lvl) {}
-
-void xpl::postfix_writer::do_sweep_down_node(xpl::sweep_down_node * const node, int lvl) {}
+void xpl::postfix_writer::do_sweep_node(xpl::sweep_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_stop_node(xpl::stop_node * const node, int lvl) {}
 
@@ -242,3 +240,5 @@ void xpl::postfix_writer::do_block_node(xpl::block_node * const node, int lvl) {
 void xpl::postfix_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_identity_node(xpl::identity_node * const node, int lvl) {}
+
+void xpl::postfix_writer::do_index_node(xpl::index_node * const node, int lvl) {}

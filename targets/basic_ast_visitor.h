@@ -113,8 +113,7 @@ public:
   virtual void do_if_else_node(xpl::if_else_node * const node, int lvl) = 0;
 
 public: // XPL
-  virtual void do_sweep_up_node(xpl::sweep_up_node * const node, int lvl) = 0;
-  virtual void do_sweep_down_node(xpl::sweep_down_node * const node, int lvl) = 0;
+  virtual void do_sweep_node(xpl::sweep_node * const node, int lvl) = 0;
   virtual void do_stop_node(xpl::stop_node * const node, int lvl) = 0;
   virtual void do_next_node(xpl::next_node * const node, int lvl) = 0;
   virtual void do_return_node(xpl::return_node * const node, int lvl) = 0;
@@ -125,6 +124,7 @@ public: // XPL
   virtual void do_block_node(xpl::block_node * const node, int lvl) = 0;
   virtual void do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) = 0;
   virtual void do_identity_node(xpl::identity_node * const node, int lvl) = 0;
+  virtual void do_index_node(xpl::index_node * const node, int lvl) = 0;
 
 };
 
