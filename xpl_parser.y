@@ -13,7 +13,8 @@
   double                r;  /* real value */
   std::string          *s;  /* symbol name or string literal */
   cdk::basic_node      *node; /* node pointer */
-  xpl::block_node       *block;
+  xpl::block_node      *block;
+  xpl::if_node         *ifnode;
   cdk::sequence_node   *sequence;
   cdk::expression_node *expression; /* expression nodes */
   cdk::lvalue_node     *lvalue;
@@ -27,6 +28,7 @@
 %token tWHILE tIF tELSIF tELSE tSWEEP tNULL
 
 %nonassoc tIFX
+%left tELSIF
 %nonassoc tELSE
 %nonassoc tSTRCAT
 %nonassoc tINTEGER tREAL tSTRING tIDENTIFIER
@@ -47,11 +49,12 @@
 %right tBCL '}'
 
 %type <node> decl var func inst iter cond
-%type <sequence> file decls insts args exprs
+%type <sequence> file decls insts args exprs elifs
 %type <expression> expr lit
 %type <lvalue> lval
 %type <block> block
 %type <type> type
+%type <ifnode> elif
 %type <s> qual sdir strg
 
 %%
@@ -115,8 +118,16 @@ inst  : expr ';'              { $$ = new xpl::evaluation_node(LINE, $1); }
       | block                 { $$ = $1; }
       ;
 
-cond  : tIF '(' expr ')' inst %prec tIFX          { $$ = new xpl::if_node(LINE, $3, $5); }
-      | tIF '(' expr ')' inst tELSE inst          { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
+elif  : tELSIF '(' expr ')' inst  { $$ = new xpl::if_node(LINE, $3, $5); }
+      ;
+
+elifs : elif                      { $$ = new cdk::sequence_node(LINE, $1); }
+      | elifs ',' elif            { $$ = new cdk::sequence_node(LINE, $3, $1); }
+      ;
+
+cond  : tIF '(' expr ')' inst %prec tIFX        { $$ = new xpl::if_node(LINE, $3, $5); }
+      | tIF '(' expr ')' inst tELSE inst        { $$ = new xpl::if_else_node(LINE, $3, $5, $7); }
+      | tIF '(' expr ')' inst elifs tELSE inst %prec tELSIF  { $$ = new xpl::if_elsif_else_node(LINE, $3, $5, $6, $8); }
       ;
 
 sdir  : '+'  { $$ = $1; }
@@ -145,6 +156,7 @@ exprs : expr                      { $$ = new cdk::sequence_node(LINE, $1); }
 expr  : lit                       { $$ = $1; }
       | '-' expr %prec tUNARY     { $$ = new xpl::symmetry_node(LINE, $2); }
       | '+' expr %prec tUNARY     { $$ = new xpl::identity_node(LINE, $2); }
+      | '~' expr %prec tUNARY     { $$ = new cdk::not_node(LINE, $2); }
       | expr '+' expr             { $$ = new cdk::add_node(LINE, $1, $3); }
       | expr '-' expr             { $$ = new cdk::sub_node(LINE, $1, $3); }
       | expr '*' expr             { $$ = new cdk::mul_node(LINE, $1, $3); }
@@ -156,13 +168,12 @@ expr  : lit                       { $$ = $1; }
       | expr tLE expr             { $$ = new cdk::le_node(LINE, $1, $3); }
       | expr tNE expr             { $$ = new cdk::ne_node(LINE, $1, $3); }
       | expr tEQ expr             { $$ = new cdk::eq_node(LINE, $1, $3); }
-      | '~' expr                  { $$ = new cdk::neg_node(LINE, $2); }
       | expr tOR expr             { $$ = new cdk::or_node(LINE, $1, $3); }
       | expr tAND expr            { $$ = new cdk::and_node(LINE, $1, $3); }
       | '(' expr ')'              { $$ = $2; }
       | '[' expr ']'              { $$ = new xpl::memory_allocation_node(LINE, $2); }
       | tREAD                     { $$ = new xpl::read_node(LINE); }
-      | lval                      { $$ = new cdk::rvalue_node(LINE, $1); }
+      | lval                      { $$ = new cdk::rvalue_node(LINE, $1); } //FixWatTho
       | lval '=' expr             { $$ = new cdk::assignment_node(LINE, $1, $3); }
       | tIDENTIFIER '(' exprs ')' { $$ = new xpl::function_call_node(LINE, $1, $3); }
       ;

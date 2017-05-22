@@ -77,6 +77,7 @@ namespace xpl {
     void do_while_node(xpl::while_node * const node, int lvl);
     void do_if_node(xpl::if_node * const node, int lvl);
     void do_if_else_node(xpl::if_else_node * const node, int lvl);
+    void do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl);
 
   public: // XPL
     void do_sweep_node(xpl::sweep_node * const node, int lvl);

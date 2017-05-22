@@ -1,4 +1,3 @@
-// $Id: read_node.h,v 1.1 2017/02/17 16:02:31 david Exp $ -*- c++ -*-
 #ifndef __XPL_READNODE_H__
 #define __XPL_READNODE_H__
 

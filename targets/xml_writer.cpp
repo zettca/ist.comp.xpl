@@ -172,6 +172,23 @@ void xpl::xml_writer::do_if_else_node(xpl::if_else_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 
+void xpl::xml_writer::do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  openTag("condition", lvl + 2);
+  node->condition()->accept(this, lvl + 4);
+  closeTag("condition", lvl + 2);
+  openTag("then", lvl + 2);
+  node->thenblock()->accept(this, lvl + 4);
+  closeTag("then", lvl + 2);
+  /*for (size_t i = 0; i < node->elsifs()->size(); i++)
+    node->elsifs()->node(i)->accept(this, lvl + 2);*/
+  openTag("else", lvl + 2);
+  node->elseblock()->accept(this, lvl + 4);
+  closeTag("else", lvl + 2);
+  closeTag(node, lvl);
+}
+
 void xpl::xml_writer::do_sweep_node(xpl::sweep_node * const node, int lvl) {
 
 }

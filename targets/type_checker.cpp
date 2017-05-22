@@ -166,6 +166,17 @@ void xpl::type_checker::do_if_else_node(xpl::if_else_node * const node, int lvl)
   node->elseblock()->accept(this, lvl + 4);
 }
 
+/* XPL */
+
+void xpl::type_checker::do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl) {
+  node->condition()->accept(this, lvl + 4);
+  node->thenblock()->accept(this, lvl + 4);
+  /*for (size_t i = 0; i < node->elsifs()->size(); i++) {
+    node->elsifs()->node(i)->accept(this, lvl + 4)
+  }*/
+  node->elseblock()->accept(this, lvl + 4);
+}
+
 void xpl::type_checker::do_sweep_node(xpl::sweep_node * const node, int lvl) {
   node->iterable()->accept(this, lvl + 4);
   if (node->iterable()->type()->name() != basic_type::TYPE_INT)
@@ -185,8 +196,6 @@ void xpl::type_checker::do_sweep_node(xpl::sweep_node * const node, int lvl) {
 
   node->block()->accept(this, lvl + 4);
 }
-
-/* XPL */
 
 void xpl::type_checker::do_stop_node(xpl::stop_node * const node, int lvl) { /* empty */ }
 

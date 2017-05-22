@@ -219,6 +219,10 @@ void xpl::postfix_writer::do_if_else_node(xpl::if_else_node * const node, int lv
   _pf.LABEL(mklbl(lbl1 = lbl2));
 }
 
+void xpl::postfix_writer::do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl) {
+
+}
+
 void xpl::postfix_writer::do_sweep_node(xpl::sweep_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_stop_node(xpl::stop_node * const node, int lvl) {}

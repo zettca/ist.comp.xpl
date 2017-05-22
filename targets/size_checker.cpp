@@ -47,6 +47,7 @@ void xpl::size_checker::do_read_node(xpl::read_node * const node, int lvl) {}
 void xpl::size_checker::do_while_node(xpl::while_node * const node, int lvl) {}
 void xpl::size_checker::do_if_node(xpl::if_node * const node, int lvl) {}
 void xpl::size_checker::do_if_else_node(xpl::if_else_node * const node, int lvl) {}
+void xpl::size_checker::do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl) {}
 
 void xpl::size_checker::do_stop_node(xpl::stop_node * const node, int lvl) {}
 void xpl::size_checker::do_next_node(xpl::next_node * const node, int lvl) {}

@@ -54,9 +54,9 @@ EXP     [eE][-+]?{DEC}
 "stop"            return tSTOP;
 "return"          return tRETURN;
 
-":"               return tCOL;
 "["               return tBOP;
 "]"               return tBCL;
+":"               return tCOL;
 "@"               return tREAD;
 "|"               return tOR;
 "&"               return tAND;
@@ -88,7 +88,7 @@ EXP     [eE][-+]?{DEC}
 <X_IGNORE>\n           ;
 
 
-[-()<>=+*/%;{}.]       return *yytext;
+[-()<>=+*/%;,{}[]|&@:.]       return *yytext;
 
 [ \t\n]+               ; /* ignore whitespace */
 

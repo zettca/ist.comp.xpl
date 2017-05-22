@@ -111,6 +111,7 @@ public:
   virtual void do_while_node(xpl::while_node * const node, int lvl) = 0;
   virtual void do_if_node(xpl::if_node * const node, int lvl) = 0;
   virtual void do_if_else_node(xpl::if_else_node * const node, int lvl) = 0;
+  virtual void do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl) = 0;
 
 public: // XPL
   virtual void do_stop_node(xpl::stop_node * const node, int lvl) = 0;
