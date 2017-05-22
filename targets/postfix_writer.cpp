@@ -1,6 +1,7 @@
 #include <string>
 #include <sstream>
 #include "targets/type_checker.h"
+#include "targets/size_checker.h"
 #include "targets/postfix_writer.h"
 #include "ast/all.h"  // all.h is automatically generated
 
@@ -231,30 +232,37 @@ void xpl::postfix_writer::do_next_node(xpl::next_node * const node, int lvl) {}
 
 void xpl::postfix_writer::do_return_node(xpl::return_node * const node, int lvl) {}
 
-void xpl::postfix_writer::do_declaration_node(xpl::declaration_node * const node, int lvl) {}
+void xpl::postfix_writer::do_declaration_node(xpl::declaration_node * const node, int lvl) {
+  
+}
 
-void xpl::postfix_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {}
+void xpl::postfix_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {
+  std::string id = parse_id(*node->identifier());
+  std::string qual = *node->qualifier();
+  if (qual == "public") {
+    _pf.GLOBAL(id, _pf.FUNC());
+  } else if (qual == "use") {
+    _pf.EXTERN(id);
+  }
+}
 
 void xpl::postfix_writer::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   _pf.TEXT();
   _pf.ALIGN();
 
-  if (*node->identifier() == "xpl") { // xpl main function
-    _pf.GLOBAL("_main", _pf.FUNC());
-    _pf.LABEL("_main");
-    _pf.ENTER(0);
-  } else {
-    _pf.GLOBAL(*node->identifier(), _pf.FUNC());
-    _pf.LABEL(*node->identifier());
-    _pf.ENTER(0);
-  }
+  std::string id = parse_id(*node->identifier());
+  _pf.GLOBAL(id, _pf.FUNC());
+  _pf.LABEL(id);
+
+  /*xpl::size_checker *visitor = new xpl::size_checker(_compiler);
+  node->accept(visitor, 0);
+  int size = visitor->size();*/
+
+  _pf.ENTER(0);
 
   node->block()->accept(this, lvl + 2);
 
-  // TODO stuff
-
-  _pf.POP();
   _pf.LEAVE();
   _pf.RET();
 }
@@ -262,10 +270,32 @@ void xpl::postfix_writer::do_function_definition_node(xpl::function_definition_n
 void xpl::postfix_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
+  int size = 0;
+  if (node->arguments() != nullptr) {
+    for (int i = node->arguments()->size() - 1; i >= 0; i--) {
+      node->arguments()->node(i)->accept(this, lvl);
+      size += ((cdk::expression_node *) node->arguments()->node(i))->type()->size();
+    }
+  }
+
+  std::string id = parse_id(*node->identifier());
+  _pf.CALL(id);
+
+  _pf.TRASH(size);
+  _pf.PUSH(); // or DPUSH
+
 
 }
 
-void xpl::postfix_writer::do_block_node(xpl::block_node * const node, int lvl) {}
+void xpl::postfix_writer::do_block_node(xpl::block_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  _symtab.push();
+  if (node->declarations() != nullptr)
+    node->declarations()->accept(this, lvl + 2);
+  if (node->instructions() != nullptr)
+    node->instructions()->accept(this, lvl + 2);
+  _symtab.pop();
+}
 
 void xpl::postfix_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
 

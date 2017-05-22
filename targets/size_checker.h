@@ -9,14 +9,14 @@
 namespace xpl {
 
   class size_checker : public basic_ast_visitor {
-  private:
     int _size;
 
   public:
     size_checker (std::shared_ptr<cdk::compiler> compiler) :
       basic_ast_visitor(compiler), _size(0) {}
-    ~size_checker () {
-    }
+    ~size_checker () {}
+
+    int size() { return _size; }
 
   public:
     void do_sequence_node(cdk::sequence_node * const node, int lvl);

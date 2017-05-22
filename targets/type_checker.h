@@ -1,4 +1,3 @@
-// $Id: type_checker.h,v 1.10 2017/05/21 19:05:31 ist178013 Exp $ -*- c++ -*-
 #ifndef __XPL_SEMANTICS_TYPE_CHECKER_H__
 #define __XPL_SEMANTICS_TYPE_CHECKER_H__
 

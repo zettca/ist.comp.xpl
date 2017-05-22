@@ -29,6 +29,10 @@ namespace xpl {
       os().flush();
     }
 
+  std::string parse_id(std::string id) {
+    return (id == "xpl") ? "_main" : id;
+  }
+
   private:
     /** Method used to generate sequential labels. */
     inline std::string mklbl(int lbl) {

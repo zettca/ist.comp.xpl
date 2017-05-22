@@ -171,9 +171,7 @@ void xpl::type_checker::do_if_else_node(xpl::if_else_node * const node, int lvl)
 void xpl::type_checker::do_if_elsif_else_node(xpl::if_elsif_else_node * const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
   node->thenblock()->accept(this, lvl + 4);
-  /*for (size_t i = 0; i < node->elsifs()->size(); i++) {
-    node->elsifs()->node(i)->accept(this, lvl + 4)
-  }*/
+  node->elsifs()->accept(this, lvl + 4);
   node->elseblock()->accept(this, lvl + 4);
 }
 
@@ -203,11 +201,12 @@ void xpl::type_checker::do_next_node(xpl::next_node * const node, int lvl) { /* 
 
 void xpl::type_checker::do_return_node(xpl::return_node * const node, int lvl) { /* empty */ }
 
-void check_function_types(basic_type * const type, basic_type * const ret) {
-  if (type->name() == basic_type::TYPE_DOUBLE && ret->name() == basic_type::TYPE_INT)
+void check_valid_types(basic_type * const type1, basic_type * const type2) {
+  if (type1->name() == basic_type::TYPE_DOUBLE &&
+      type2->name() == basic_type::TYPE_INT)
     return; // valid exception
-  if (type->name() != ret->name())
-    throw std::string("function type and return are incompatible");
+  if (type1->name() != type2->name())
+    throw std::string("incompatible types");
 }
 
 void check_function_arguments(cdk::sequence_node * const args) {
@@ -233,8 +232,7 @@ void xpl::type_checker::do_declaration_node(xpl::declaration_node * const node, 
 
   if (node->value() != nullptr) {
     node->value()->accept(this, lvl + 2);
-    if (node->type()->name() != node->value()->type()->name())
-      throw std::string("variable type and return value are incompatible");
+    check_valid_types(node->type(), node->value()->type());
   }
 }
 
@@ -255,12 +253,15 @@ void xpl::type_checker::do_function_definition_node(xpl::function_definition_nod
 
   if (node->ret_val() != nullptr) {
     node->ret_val()->accept(this, lvl);
-    check_function_types(node->type(), node->ret_val()->type());
+    check_valid_types(node->type(), node->ret_val()->type());
   }
 }
 
 void xpl::type_checker::do_function_call_node(xpl::function_call_node * const node, int lvl) {
   ASSERT_UNSPEC;
+  std::string id = *node->identifier();
+  if (_symtab.find(id) == nullptr)
+    throw std::string("function " + id + " does not exist");
 }
 
 void xpl::type_checker::do_block_node(xpl::block_node * const node, int lvl) {
@@ -268,7 +269,10 @@ void xpl::type_checker::do_block_node(xpl::block_node * const node, int lvl) {
   if (node->instructions() != nullptr) node->instructions()->accept(this, lvl);
 }
 
-void xpl::type_checker::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
+void xpl::type_checker::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {
+  if (node->argument()->type()->name() != basic_type::TYPE_INT)
+    throw std::string("allocation must be integer value");
+}
 
 void xpl::type_checker::do_identity_node(xpl::identity_node * const node, int lvl) {
   if (node->argument()->type()->name() != basic_type::TYPE_INT &&

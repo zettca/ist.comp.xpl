@@ -47,8 +47,8 @@ EXP     [eE][-+]?{DEC}
 "string"          return tTYPESTRING;
 "procedure"       return tVOID;
 
-"use"             return tUSE;
-"public"          return tPUBLIC;
+"use"             { yylval.s = new std::string("use"); return tUSE; }
+"public"          { yylval.s = new std::string("public"); return tPUBLIC; }
 
 "next"            return tNEXT;
 "stop"            return tSTOP;
