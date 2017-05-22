@@ -252,18 +252,15 @@ void xpl::postfix_writer::do_declaration_node(xpl::declaration_node * const node
   ASSERT_SAFE_EXPRESSIONS;
   std::string id = *node->identifier();
   std::string qual = *node->qualifier();
-  std::shared_ptr<zu::symbol> symbol = _symtab.find_local(id);
+  std::shared_ptr<xpl::symbol> symbol = _symtab.find_local(id);
 
   bool has_value = false;
   if(node->value() != nullptr)
     has_value = true;
 
-  _current_offset -= node->type()->size();
-  symbol->offset(_current_offset);
-
   if (has_value){
     node->value()->accept(this, lvl + 2);
-    _pf.LOCAL(symbol->offset());
+    _pf.LOCAL(is_real(node->type()) ? 8 : 4);
 
     if (is_real(node->type())) {
       _pf.DSTORE();

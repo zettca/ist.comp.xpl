@@ -181,8 +181,10 @@ void xpl::xml_writer::do_if_elsif_else_node(xpl::if_elsif_else_node * const node
   openTag("then", lvl + 2);
   node->thenblock()->accept(this, lvl + 4);
   closeTag("then", lvl + 2);
-  /*for (size_t i = 0; i < node->elsifs()->size(); i++)
-    node->elsifs()->node(i)->accept(this, lvl + 2);*/
+  openTag("elsif", lvl + 2);
+  for (size_t i = 0; i < node->elsifs()->size(); i++)
+    node->elsifs()->node(i)->accept(this, lvl + 4);
+  closeTag("elsif", lvl + 2);
   openTag("else", lvl + 2);
   node->elseblock()->accept(this, lvl + 4);
   closeTag("else", lvl + 2);
@@ -190,7 +192,25 @@ void xpl::xml_writer::do_if_elsif_else_node(xpl::if_elsif_else_node * const node
 }
 
 void xpl::xml_writer::do_sweep_node(xpl::sweep_node * const node, int lvl) {
-
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  openTag("direction", lvl + 2);
+  os() << node->direction();
+  closeTag("direction", lvl + 2);
+  openTag("iterable", lvl + 2);
+  node->iterable()->accept(this, lvl + 2);
+  closeTag("iterable", lvl + 2);
+  openTag("initial_value", lvl + 2);
+  node->initial_value()->accept(this, lvl + 2);
+  closeTag("initial_value", lvl + 2);
+  openTag("final_value", lvl + 2);
+  node->final_value()->accept(this, lvl + 2);
+  closeTag("final_value", lvl + 2);
+  openTag("increment", lvl + 2);
+  node->increment()->accept(this, lvl + 2);
+  closeTag("increment", lvl + 2);
+  node->block()->accept(this, lvl + 2);
+  closeTag(node, lvl);
 }
 
 void xpl::xml_writer::do_stop_node(xpl::stop_node * const node, int lvl) {
@@ -212,7 +232,14 @@ void xpl::xml_writer::do_return_node(xpl::return_node * const node, int lvl) {
 }
 
 void xpl::xml_writer::do_declaration_node(xpl::declaration_node * const node, int lvl) {
-
+  openTag(node, lvl);
+  //os() << std::string(lvl + 2, ' ') << "<name>" << node->name() << "</name>" << std::endl;
+  if (node->value() != nullptr) {
+    openTag("value", lvl + 2);
+    node->value()->accept(this, lvl + 4);
+    closeTag("value", lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 
 void xpl::xml_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {
@@ -224,7 +251,15 @@ void xpl::xml_writer::do_function_definition_node(xpl::function_definition_node 
 }
 
 void xpl::xml_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {
-
+  openTag(node, lvl);
+  if (node->arguments() != nullptr) {
+      openTag("args", lvl + 2);
+      node->arguments()->accept(this, lvl + 4);
+      closeTag("args", lvl + 2);
+  } else {
+      os() << std::string(lvl + 2, ' ') << "<args></args>" << std::endl;
+  }
+  closeTag(node, lvl);
 }
 
 void xpl::xml_writer::do_block_node(xpl::block_node * const node, int lvl) {
@@ -234,7 +269,9 @@ void xpl::xml_writer::do_block_node(xpl::block_node * const node, int lvl) {
 }
 
 void xpl::xml_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {
-
+  openTag(node, lvl);
+    node->argument()->accept(this, lvl + 2);
+  closeTag(node, lvl);
 }
 
 void xpl::xml_writer::do_identity_node(xpl::identity_node * const node, int lvl) {
@@ -246,5 +283,12 @@ void xpl::xml_writer::do_symmetry_node(xpl::symmetry_node * const node, int lvl)
 }
 
 void xpl::xml_writer::do_index_node(xpl::index_node * const node, int lvl) {
-
+  openTag(node, lvl);
+  openTag("identifier", lvl + 2);
+  os() << *node->identifier() << std::endl;
+  closeTag("identifier", lvl + 2);
+  openTag("offset", lvl + 2);
+  node->offset()->accept(this, lvl + 4);
+  closeTag("offset", lvl + 2);
+  closeTag(node, lvl);
 }
