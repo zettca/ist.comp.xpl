@@ -13,7 +13,7 @@
 D0      [0-9]
 D1      [1-9]
 DEC     "0"|{D1}{D0}*
-HEX     [{D0}A-Fa-f]
+HEX     [0-9A-Fa-f]
 EXP     [eE][-+]?{DEC}
 
 %x X_STRING X_ESCAPE X_IGNORE X_COMMENT
@@ -32,6 +32,7 @@ EXP     [eE][-+]?{DEC}
 "=="              return tEQ;
 "!="              return tNE;
 
+"!"               return tPRINT;
 "!!"              return tPLINE;
 
 "if"              return tIF;
@@ -53,9 +54,12 @@ EXP     [eE][-+]?{DEC}
 "stop"            return tSTOP;
 "return"          return tRETURN;
 
+":"               return tCOL;
 "["               return tBOP;
 "]"               return tBCL;
-
+"@"               return tREAD;
+"|"               return tOR;
+"&"               return tAND;
 
 [_[:alpha:]][_[:alnum:]]*   yylval.s = new std::string(yytext); return tIDENTIFIER;
 
