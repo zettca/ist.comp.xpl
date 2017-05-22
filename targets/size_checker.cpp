@@ -16,7 +16,6 @@ void xpl::size_checker::do_sequence_node(cdk::sequence_node * const node, int lv
 }
 
 void xpl::size_checker::do_function_definition_node(xpl::function_definition_node * const node, int lvl) {
-  _size += node->type()->name() == basic_type::TYPE_INT ? 4 : 8;
   node->block()->accept(this, lvl);
 }
 

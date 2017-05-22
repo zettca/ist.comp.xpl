@@ -18,6 +18,14 @@ namespace xpl {
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
 
+
+  private:
+  bool is_int(basic_type *type) { return type->name() == basic_type::TYPE_INT; }
+  bool is_real(basic_type *type) { return type->name() == basic_type::TYPE_DOUBLE; }
+  bool is_string(basic_type *type) { return type->name() == basic_type::TYPE_STRING; }
+  bool is_pointer(basic_type *type) { return type->name() == basic_type::TYPE_POINTER; }
+  bool is_procedure(basic_type *type) { return type->name() == basic_type::TYPE_VOID; }
+
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<xpl::symbol> &symtab,
                    cdk::basic_postfix_emitter &pf) :

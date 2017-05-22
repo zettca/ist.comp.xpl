@@ -162,6 +162,9 @@ void xpl::postfix_writer::do_print_node(xpl::print_node * const node, int lvl) {
   if (node->argument()->type()->name() == basic_type::TYPE_INT) {
     _pf.CALL("printi");
     _pf.TRASH(4); // delete the printed value
+  } else if (node->argument()->type()->name() == basic_type::TYPE_DOUBLE) {
+    _pf.CALL("printd");
+    _pf.TRASH(8); // delete the printed value's address
   } else if (node->argument()->type()->name() == basic_type::TYPE_STRING) {
     _pf.CALL("prints");
     _pf.TRASH(4); // delete the printed value's address
@@ -169,7 +172,11 @@ void xpl::postfix_writer::do_print_node(xpl::print_node * const node, int lvl) {
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
   }
-  _pf.CALL("println"); // print a newline
+
+  if (node->newline()){
+    _pf.CALL("println"); // print a newline
+    _pf.EXTERN("prints");
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -226,17 +233,48 @@ void xpl::postfix_writer::do_if_elsif_else_node(xpl::if_elsif_else_node * const 
 
 void xpl::postfix_writer::do_sweep_node(xpl::sweep_node * const node, int lvl) {}
 
-void xpl::postfix_writer::do_stop_node(xpl::stop_node * const node, int lvl) {}
+void xpl::postfix_writer::do_stop_node(xpl::stop_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // _pf.JMP(mklbl(_pos));
+}
 
-void xpl::postfix_writer::do_next_node(xpl::next_node * const node, int lvl) {}
+void xpl::postfix_writer::do_next_node(xpl::next_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // _pf.JMP(mklbl(_pos));
+}
 
-void xpl::postfix_writer::do_return_node(xpl::return_node * const node, int lvl) {}
+void xpl::postfix_writer::do_return_node(xpl::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // _pf.JMP(mklbl(_pos));
+}
 
 void xpl::postfix_writer::do_declaration_node(xpl::declaration_node * const node, int lvl) {
-  
+  ASSERT_SAFE_EXPRESSIONS;
+  std::string id = *node->identifier();
+  std::string qual = *node->qualifier();
+  std::shared_ptr<zu::symbol> symbol = _symtab.find_local(id);
+
+  bool has_value = false;
+  if(node->value() != nullptr)
+    has_value = true;
+
+  _current_offset -= node->type()->size();
+  symbol->offset(_current_offset);
+
+  if (has_value){
+    node->value()->accept(this, lvl + 2);
+    _pf.LOCAL(symbol->offset());
+
+    if (is_real(node->type())) {
+      _pf.DSTORE();
+    } else {
+      _pf.STORE();
+    }
+  }
 }
 
 void xpl::postfix_writer::do_function_declaration_node(xpl::function_declaration_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
   std::string id = parse_id(*node->identifier());
   std::string qual = *node->qualifier();
   if (qual == "public") {
@@ -252,19 +290,57 @@ void xpl::postfix_writer::do_function_definition_node(xpl::function_definition_n
   _pf.ALIGN();
 
   std::string id = parse_id(*node->identifier());
-  _pf.GLOBAL(id, _pf.FUNC());
+  std::string qual = *node->qualifier();
+  if (qual == "public")
+    _pf.GLOBAL(id, _pf.FUNC());
   _pf.LABEL(id);
 
   /*xpl::size_checker *visitor = new xpl::size_checker(_compiler);
   node->accept(visitor, 0);
-  int size = visitor->size();*/
+  int body_size = visitor->size();
+  delete visitor;*/
 
-  _pf.ENTER(0);
+  int ret_size = (node->type()->name() == basic_type::TYPE_DOUBLE) ? 8 : 4;
+
+  _pf.ENTER(4 /* body_size */);
+
+  if (node->ret_val() != nullptr) {
+    node->ret_val()->accept(this, lvl + 2);
+    if (ret_size == 8) {
+      _pf.I2D();
+      _pf.LOCAL(-8);
+      _pf.DSTORE();
+    } else if (ret_size == 4) {
+      _pf.LOCA(-4);
+    }
+  } else {
+    if (node->type() != nullptr) { // default non-error return
+      _pf.INT(0);
+      _pf.LOCA(-4);
+    }
+  }
+
+  _symtab.push();
 
   node->block()->accept(this, lvl + 2);
 
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(++_lbl));
+
+  if( ret_size == 8){
+    _pf.LOCAL(-8);
+    _pf.DLOAD();
+    _pf.DPOP();
+  } else if( ret_size == 4){
+    _pf.LOCAL(-4);
+    _pf.LOAD();
+    _pf.POP();
+  }
+
   _pf.LEAVE();
   _pf.RET();
+
+  _symtab.pop();
 }
 
 void xpl::postfix_writer::do_function_call_node(xpl::function_call_node * const node, int lvl) {
@@ -283,8 +359,6 @@ void xpl::postfix_writer::do_function_call_node(xpl::function_call_node * const 
 
   _pf.TRASH(size);
   _pf.PUSH(); // or DPUSH
-
-
 }
 
 void xpl::postfix_writer::do_block_node(xpl::block_node * const node, int lvl) {
@@ -297,10 +371,35 @@ void xpl::postfix_writer::do_block_node(xpl::block_node * const node, int lvl) {
   _symtab.pop();
 }
 
-void xpl::postfix_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {}
+void xpl::postfix_writer::do_memory_allocation_node(xpl::memory_allocation_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  node->argument()->accept(this, lvl);
+  _pf.INT(4);
+  _pf.MUL();
+  _pf.ALLOC();
+  _pf.SP();
+}
 
-void xpl::postfix_writer::do_identity_node(xpl::identity_node * const node, int lvl) {}
+void xpl::postfix_writer::do_identity_node(xpl::identity_node * const node, int lvl) {
+  if (is_real(node->type())) {
+    _pf.CALL("readd");
+    _pf.EXTERN("readd");
+    _pf.DPUSH();
+  } else if (is_int(node->type())){
+    _pf.CALL("readi");
+    _pf.EXTERN("readi");
+    _pf.PUSH();
+  } else {
+    throw std::string("can only read ints/reals");
+  }
+}
 
 void xpl::postfix_writer::do_symmetry_node(xpl::symmetry_node * const node, int lvl) {}
 
-void xpl::postfix_writer::do_index_node(xpl::index_node * const node, int lvl) {}
+void xpl::postfix_writer::do_index_node(xpl::index_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  int size = (node->type()->name() == basic_type::TYPE_DOUBLE) ? 8 : 4;
+  node->offset()->accept(this, lvl); // expr result
+  _pf.INT(size);
+  _pf.MUL();
+}

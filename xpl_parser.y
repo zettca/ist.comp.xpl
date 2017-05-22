@@ -73,7 +73,7 @@ decl  : var ';'       { $$ = $1; }
 type  : tTYPESTRING     { $$ = new basic_type(4, basic_type::TYPE_STRING); }
       | tTYPEREAL       { $$ = new basic_type(8, basic_type::TYPE_DOUBLE); }
       | tTYPEINT        { $$ = new basic_type(4, basic_type::TYPE_INT); }
-      | tVOID           { $$ = new basic_type(4, basic_type::TYPE_VOID); }
+      | tVOID           { $$ = nullptr; }
       | tBOP type tBCL  { $$ = new basic_type(4, basic_type::TYPE_POINTER); }
       ;
 
@@ -108,8 +108,8 @@ insts : inst                  { $$ = new cdk::sequence_node(LINE, $1); }
       ;
 
 inst  : expr ';'              { $$ = new xpl::evaluation_node(LINE, $1); }
-      | expr tPRINT           { $$ = new xpl::print_node(LINE, $1); }
-      | expr tPLINE           { $$ = new xpl::print_node(LINE, $1+'\n'); }
+      | expr tPRINT           { $$ = new xpl::print_node(LINE, $1, false); }
+      | expr tPLINE           { $$ = new xpl::print_node(LINE, $1, true); }
       | tNEXT                 { $$ = new xpl::next_node(LINE); }
       | tSTOP                 { $$ = new xpl::stop_node(LINE); }
       | tRETURN               { $$ = new xpl::return_node(LINE); }
@@ -179,7 +179,7 @@ expr  : lit                       { $$ = $1; }
       ;
 
 lval  : tIDENTIFIER               { $$ = new cdk::identifier_node(LINE, $1); }
-      | tIDENTIFIER '?'           { /* TODO */ }
+      | tIDENTIFIER '?'           { /* */ }
       | tIDENTIFIER '[' expr ']'  { $$ = new xpl::index_node(LINE, $1 ,$3); }
       ;
 
